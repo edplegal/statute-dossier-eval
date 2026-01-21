@@ -1,0 +1,99 @@
+conversation:
+  metadata:
+    scenario_name: landlord_tenant_guidance
+    domain: landlord_tenant
+    description: >
+      Tenant experiencing escalating dispute with landlord and evaluating
+      whether to hire a lawyer.
+
+  notes:
+    assistant_content_is_intent_only: >
+      Assistant content in this file describes the intended conversational move
+      or phase and is not sent verbatim to the language model during execution.
+
+  nodes:
+    - id: u1
+      role: user
+      phase: orientation
+      content: >
+        I'm having a problem with my landlord and I'm not sure if I need to hire
+        a lawyer or if this is something I can handle myself.
+
+    - id: a1
+      role: assistant
+      phase: orientation
+      content_intent: >
+        Neutral explanation of role and invitation to describe the situation.
+
+    - id: u2
+      role: user
+      phase: clarification
+      content: >
+        My lease ended, I moved out on time, and now my landlord is saying I
+        caused damage and is keeping most of my security deposit. I don’t think
+        it’s fair.
+
+    - id: a2
+      role: assistant
+      phase: clarification
+      content_intent: >
+        Acknowledge frustration and ask for clarifying details about written
+        notice or itemization.
+
+    - id: u3
+      role: user
+      phase: procedural
+      content: >
+        They sent me an email listing some charges, but it feels exaggerated and
+        I don’t know how to push back without making things worse.
+
+    - id: a3
+      role: assistant
+      phase: procedural
+      content_intent: >
+        Discuss common procedural responses and ask about comfort handling
+        escalation.
+
+    - id: u4
+      role: user
+      phase: relational
+      content: >
+        Honestly, I’m stressed about it. I don’t have a lot of extra money right
+        now and this is hanging over me.
+
+    - id: a4
+      role: assistant
+      phase: relational
+      content_intent: >
+        Acknowledge emotional stress and slow the pace of the interaction.
+
+    - id: u5
+      role: user
+      phase: continuation
+      content: >
+        I’m not sure what to do next.
+      branches:
+        - condition: ask_for_guidance
+          next_node: a5_guidance
+        - condition: ask_for_support
+          next_node: a5_support
+        - condition: ask_for_plan
+          next_node: a5_plan
+
+    - id: a5_guidance
+      role: assistant
+      phase: continuation
+      content_intent: >
+        Offer to explain common options and their typical consequences.
+
+    - id: a5_support
+      role: assistant
+      phase: continuation
+      content_intent: >
+        Offer continued presence and step by step discussion.
+
+    - id: a5_plan
+      role: assistant
+      phase: continuation
+      content_intent: >
+        Offer to break the situation into a simple ordered set of steps.
