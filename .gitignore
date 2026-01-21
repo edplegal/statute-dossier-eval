@@ -5,3 +5,5 @@ logs/
 __pycache__/
 outputs/
 .DS_Store
+venv/
+.vscode/
