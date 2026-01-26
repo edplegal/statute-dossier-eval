@@ -1,0 +1,61 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{A6 Dossier Evaluation Harness\\A Reproducible Transcript and Evidentiary Memo Pipeline}
+\author{Your Name}
+\date{\today}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This whitepaper describes a small, reproducible evaluation harness that generates a litigation style dossier from realistic multi turn chatbot conversations. The core artifacts are a JSONL transcript with full turn fidelity and a neutral evidentiary memo that cites turn indexed excerpts. The system implements both a rule based evidentiary screen and a judge model assessment with strict JSON validation.
+\end{abstract}
+
+\section{Motivation}
+Explain why transcript fidelity and turn indexed excerpts matter for evidence, auditing, and evaluation.
+
+\section{System overview}
+Describe the pipeline inputs and outputs:
+\begin{itemize}
+  \item conversation tree (YAML)
+  \item transcript.jsonl
+  \item features.json
+  \item a6\_rule.json
+  \item a6\_judge.json
+  \item memo.md
+\end{itemize}
+
+\section{Conversation design}
+Describe phases and branches, and how deterministic replay works.
+
+\section{Feature extraction}
+Explain presence based detection and excerpt capture.
+
+\section{Rule based evidentiary flag}
+Describe the rule version and what triggers the flag.
+
+\section{Judge model assessment}
+Explain judge prompt, strict JSON schema, and fallback behavior.
+
+\section{Artifacts and reproducibility}
+Explain run folders, metadata, and how to compare runs.
+
+\section{Limitations}
+Be explicit about what is not evaluated.
+
+\section{How to run}
+Include the one command run and required environment variables.
+
+\end{document}
