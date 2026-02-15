@@ -1,61 +1,201 @@
 \documentclass[11pt]{article}
-
 \usepackage[margin=1in]{geometry}
+\usepackage{setspace}
 \usepackage{hyperref}
+\usepackage{longtable}
 \usepackage{booktabs}
-\usepackage{listings}
-\usepackage{xcolor}
-
-\title{A6 Dossier Evaluation Harness\\A Reproducible Transcript and Evidentiary Memo Pipeline}
-\author{Your Name}
-\date{\today}
-
-\lstset{
-  basicstyle=\ttfamily\small,
-  breaklines=true,
-  columns=fullflexible
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{indentfirst}
+\setstretch{1.15}
+\title{Operationalizing Evidentiary Risk in Multi-Turn AI Conversations:\\
+A Case Study Based on Tennessee SB1493 / HB1455}
+\author{
+Emmanuel Donate
 }
-
+\date{\today}
 \begin{document}
 \maketitle
-
 \begin{abstract}
-This whitepaper describes a small, reproducible evaluation harness that generates a litigation style dossier from realistic multi turn chatbot conversations. The core artifacts are a JSONL transcript with full turn fidelity and a neutral evidentiary memo that cites turn indexed excerpts. The system implements both a rule based evidentiary screen and a judge model assessment with strict JSON validation.
+Recent legislative efforts regulating artificial intelligence systems increasingly rely on statutory language that references conversational behaviors, user engagement patterns, and relational characteristics of AI interactions. This paper presents a concrete, reproducible evaluation method for generating litigation-style evidentiary artifacts from realistic multi-turn AI conversations. Using Tennessee Senate Bill 1493 / House Bill 1455 as a case study, the paper demonstrates how structured conversation replay, feature extraction, rule-based flagging, and independent model-based assessment can be combined to produce artifacts suitable for legal, regulatory, or risk analysis review. The contribution is methodological rather than normative: the paper does not argue for or against the statute, nor does it assess legal compliance. Instead, it shows how conversational logs could plausibly be transformed into evidence-like records under statutes written in a conversationally grounded manner.
 \end{abstract}
+\section{Introduction}
+AI evaluation has historically focused on model capabilities, safety failures, or benchmark performance. However, recent legislative language has begun to reference interaction-level characteristics of AI systems, such as emotional acknowledgement, invitations to continue engagement, or step-by-step guidance, creating new evaluation challenges that are not addressed by standard benchmarks. These properties are not easily captured by traditional benchmarks, yet they may become relevant in legal or regulatory contexts.
 
-\section{Motivation}
-Explain why transcript fidelity and turn indexed excerpts matter for evidence, auditing, and evaluation.
+This paper addresses a narrow but increasingly important question: how could realistic multi-turn chatbot conversations be transformed into evidentiary artifacts that could plausibly be presented, scrutinized, and contested in a legal proceeding under statutes that regulate conversational behavior rather than model internals?
 
-\section{System overview}
-Describe the pipeline inputs and outputs:
+Rather than arguing for a particular legal interpretation or regulatory outcome, this paper presents a concrete method for turning realistic chatbot conversations into records that could plausibly be examined as evidence.
+
+\section{Statutory Context}
+Tennessee Senate Bill 1493 / House Bill 1455 was submitted in December 2023 by State Senator Becky Massey (R-Knoxville) and State Representative Mary Littleton (R-Dickson)~\cite{tnsb1493}.
+
+The statute addresses the regulation of certain AI-driven conversational systems and is notable for referencing behavioral and interactional characteristics rather than purely technical system attributes. While the legal interpretation of such language is outside the scope of this paper, its structure motivates the need for evaluation approaches that operate at the level of conversational transcripts.
+
+The statute is treated here solely as a motivating example of a broader class of regulations that may rely on conversational evidence.
+
+\section{Problem Framing}
+A central challenge posed by conversationally grounded statutes is that potential evidence does not reside in a single model output, but across multi-turn interactions that evolve over time.
+
+Key questions include:
 \begin{itemize}
-  \item conversation tree (YAML)
-  \item transcript.jsonl
-  \item features.json
-  \item a6\_rule.json
-  \item a6\_judge.json
-  \item memo.md
+\item How can conversational behavior be replayed deterministically?
+\item How can specific interaction patterns be identified without relying on opaque scoring?
+\item How can outputs be logged in a form suitable for external review?
+\item How can rule-based and model-based assessments coexist without conflation?
 \end{itemize}
 
-\section{Conversation design}
-Describe phases and branches, and how deterministic replay works.
+The goal is not to determine legality, but to create artifacts that could plausibly be examined by third parties such as attorneys, regulators, or auditors.
 
-\section{Feature extraction}
-Explain presence based detection and excerpt capture.
+\section{Method Overview}
+The evaluation harness presented here consists of five stages:
+\begin{enumerate}
+\item Deterministic conversation replay using a structured conversation tree
+\item Full transcript logging with turn indices and metadata
+\item Interpretable feature extraction with quoted excerpts
+\item Rule-based evidentiary flagging
+\item Independent judge-model assessment
+\end{enumerate}
 
-\section{Rule based evidentiary flag}
-Describe the rule version and what triggers the flag.
+Each stage produces a standalone artifact, enabling inspection without reliance on internal system state.
 
-\section{Judge model assessment}
-Explain judge prompt, strict JSON schema, and fallback behavior.
+A deliberate design choice is the use of two independent assessment mechanisms. The rule-based flag (stage~4) is fully deterministic and transparent: it applies a fixed boolean formula over pattern-detected features, producing a result that is auditable, reproducible, and explainable without reference to any model. The judge-model assessment (stage~5) provides a complementary evaluative lens that can detect patterns the substring rules miss, but whose outputs are inherently non-deterministic and harder to audit. By logging both assessments as separate artifacts with full provenance, the system avoids conflating mechanistic detection with model-mediated judgment. This separation is motivated by the evidentiary context: a reviewer examining these artifacts can independently evaluate the strength of each assessment and identify cases where they diverge, which may be more informative than either assessment alone.
 
-\section{Artifacts and reproducibility}
-Explain run folders, metadata, and how to compare runs.
+\section{Conversation Scenario}
+The implemented scenario involves a landlord-tenant dispute in which a user seeks guidance regarding a withheld security deposit. The conversation unfolds across five phases:
+\begin{enumerate}
+\item Orientation
+\item Clarification
+\item Procedural follow-up
+\item Relational cue
+\item Continuation request
+\end{enumerate}
+
+Branching is deterministic and controlled via an environment variable, ensuring reproducibility while preserving realistic conversational flow. At the continuation phase, the scenario supports three branch conditions (\texttt{ask\_for\_guidance}, \texttt{ask\_for\_support}, \texttt{ask\_for\_plan}), enabling comparison across different conversational paths against the same target model.
+
+Importantly, assistant nodes in the conversation tree specify \emph{content intent} rather than literal text. The target LLM generates the actual response at runtime, which is what gets evaluated. This ensures the harness tests the model's natural conversational behavior rather than canned responses.
+
+\section{Feature Extraction}
+Rather than counting occurrences or assigning numeric scores, the system performs presence-based pattern detection. Features are defined as observable conversational behaviors, including:
+\begin{itemize}
+\item Acknowledgement of user emotion
+\item Invitations to continue or disclose more
+\item Procedural or step-by-step guidance
+\item Relational framing
+\item Offers of continued engagement
+\end{itemize}
+
+Each detected feature is accompanied by:
+\begin{itemize}
+\item The turn index
+\item A short quoted excerpt (90-character window around the matched phrase)
+\item A feature label
+\end{itemize}
+
+Relational and continuation-style features are \emph{phase-gated}: they only fire in later conversation phases (relational or continuation) where the conversational context makes relational behavior meaningful. This prevents false positives from early-phase matches where phrases like ``let me know'' or ``I can help'' are procedural rather than relational.
+
+This design prioritizes interpretability over optimization. Substring matching is intentionally chosen over ML-based classifiers because the features must be fully auditable in a legal context.
+
+\section{Rule-Based Evidentiary Flag}
+A simple rule-based layer aggregates feature presence into a boolean evidentiary flag. The flag requires a conjunction: acknowledgement of emotion \textbf{and} invitation to continue \textbf{and} structured guidance \textbf{and} either relational framing or a continued engagement offer must all be present.
+
+The flag indicates whether a transcript contains a combination of behaviors that could plausibly be offered as evidence of emotionally engaged, ongoing interaction. Importantly, the rule does not claim statutory violation or compliance. It merely identifies transcripts that may warrant closer examination.
+
+\section{Judge Model Assessment}
+In parallel, an independent language model is tasked with reading the full transcript and returning a structured JSON assessment including:
+\begin{itemize}
+\item A categorical score (\texttt{likely\_yes}, \texttt{borderline}, \texttt{likely\_no})
+\item A short rationale (2--3 sentences)
+\item Cited turn indices
+\end{itemize}
+
+The judge model is treated as an evaluative lens, not a ground truth authority. Its output is logged verbatim and validated for structural correctness. If the judge returns malformed JSON, the system falls back to a \texttt{borderline} score with \texttt{valid\_json: false} rather than crashing, preserving the pipeline while flagging the degradation.
+
+This approach draws on the emerging practice of using language models as evaluators of other language model outputs~\cite{zheng2023judging}, while maintaining the principle that no single assessment mechanism is authoritative.
+
+\section{Implementation}
+The evaluation pipeline is implemented in Python and built on the \texttt{inspect-ai} framework~\cite{inspectai}, which provides model abstraction, asynchronous generation, and solver composition.
+
+The pipeline is strictly linear, orchestrated by a single runner module:
+
+\begin{enumerate}
+\item A YAML conversation tree is loaded and parsed. The runner navigates the tree node by node, injecting scripted user messages and calling the target model for assistant turns.
+\item Each turn (system, user, assistant) is appended to a JSONL transcript file with turn index, role, content, node ID, and conversation phase.
+\item After replay completes, the transcript is read back and passed through the feature extraction layer, which scans only assistant turns.
+\item The extracted features are passed to the rule-based flag, which applies its boolean formula.
+\item The full transcript is serialized as numbered text and sent to the judge model for independent assessment.
+\item A Markdown evidentiary memo is assembled, merging rule-based evidence and judge-cited turns into a single excerpt table with counterarguments.
+\end{enumerate}
+
+All artifacts are written to a timestamped run directory (\texttt{outputs/YYYYMMDD\_HHMMSS/}), ensuring each run is self-contained and reproducible. Configuration is controlled entirely through environment variables, and the system validates required API keys at startup.
+
+\section{Generated Artifacts}
+Each evaluation run produces the following artifacts:
+\begin{itemize}
+\item \texttt{transcript.jsonl}: full turn-by-turn conversation log
+\item \texttt{run\_meta.json}: run configuration and metadata
+\item \texttt{features.json}: extracted features with excerpts
+\item \texttt{a6\_rule.json}: rule-based evidentiary flag
+\item \texttt{a6\_judge.json}: judge model assessment
+\item \texttt{memo.md}: neutral evidentiary memorandum
+\end{itemize}
+
+All artifacts are stored in a run-specific directory to preserve auditability.
+
+\section{Evidentiary Memo}
+The generated memorandum adopts a litigation-style format, summarizing:
+\begin{itemize}
+\item Run metadata
+\item Rule-based findings
+\item Judge assessment
+\item Quoted excerpts with turn numbers
+\item Counterarguments and limitations
+\end{itemize}
+
+The memo is intentionally neutral in tone and avoids legal conclusions.
 
 \section{Limitations}
-Be explicit about what is not evaluated.
+This case study has several limitations:
+\begin{itemize}
+\item Only a single statute and scenario are evaluated
+\item Feature definitions are intentionally conservative and rely on substring matching
+\item No claim is made about enforcement likelihood or legal sufficiency
+\item The judge model assessment is non-deterministic and subject to the limitations of LLM-as-judge approaches~\cite{zheng2023judging}
+\item The approach does not generalize automatically to all conversational statutes
+\end{itemize}
 
-\section{How to run}
-Include the one command run and required environment variables.
+These limitations are by design, prioritizing clarity and reproducibility over breadth. The feature extraction patterns, rule logic, and report counterarguments are currently hardcoded to the A6 landlord-tenant scenario; generalizing to additional statutes or scenarios would require refactoring these components.
 
+\section{Discussion}
+The primary contribution of this work is not a legal argument or a policy recommendation, but a demonstration that conversational evaluation can be operationalized in a manner compatible with evidentiary review.
+
+For AI practitioners, the work highlights a class of risks that are not captured by standard benchmarks. For evaluators, it illustrates how structured logging and interpretation-first design can support downstream scrutiny. For legal researchers, the dual-assessment approach (deterministic rule plus independent model judge) provides a template for producing artifacts where the provenance and limitations of each finding are explicit.
+
+\section{Conclusion}
+As AI regulation increasingly engages with conversational behavior, evaluation methods must extend beyond static prompts and aggregate scores. This paper presents a concrete, inspectable approach for generating evidentiary artifacts from realistic multi-turn interactions.
+
+While the case study is grounded in a specific Tennessee statute, the method is applicable to a broader class of conversationally framed regulatory regimes. Future work may explore additional statutes, scenarios, and evaluation lenses, but the core contribution remains methodological: showing how conversational evidence can be produced, logged, and examined with rigor.
+
+\section*{Non-Claims}
+This paper does not provide legal advice, does not interpret statutory intent, and does not assess compliance or violation. All artifacts are generated for evaluation and research purposes only.
+
+\bibliographystyle{plain}
+\begin{thebibliography}{9}
+
+\bibitem{tnsb1493}
+Tennessee Senate Bill 1493 / House Bill 1455.
+\url{https://www.capitol.tn.gov/Bills/114/Bill/SB1493.pdf}
+
+\bibitem{zheng2023judging}
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, Ion Stoica.
+Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena.
+\emph{Advances in Neural Information Processing Systems}, 36, 2023.
+
+\bibitem{inspectai}
+UK AI Safety Institute.
+Inspect: A framework for large language model evaluations.
+\url{https://inspect.ai-safety-institute.org.uk/}, 2024.
+
+\end{thebibliography}
 \end{document}

@@ -15,7 +15,7 @@ def now_run_id() -> str:
 
 
 def repo_root_from_src_file(src_file: Path) -> Path:
-    # src/a6_dossier_eval/io.py -> repo root is three parents up
+    # src/statute_dossier_eval/<module>.py -> repo root is three parents up
     return src_file.resolve().parents[2]
 
 
