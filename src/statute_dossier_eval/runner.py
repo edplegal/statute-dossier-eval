@@ -13,7 +13,7 @@ from inspect_ai.solver import solver, system_message
 from statute_dossier_eval.config import JUDGE_MODEL, TEMPERATURE_JUDGE
 from statute_dossier_eval.judges import judge_model_a6_assessment
 
-from statute_dossier_eval.config import TARGET_MODEL, TEMPERATURE_TARGET, BRANCH_LABEL, SCENARIO_PATH
+from statute_dossier_eval.config import TARGET_MODEL, TEMPERATURE_TARGET, BRANCH_LABEL, SCENARIO_PATH, validate_config
 
 from statute_dossier_eval.io import (
     TurnRecord,
@@ -144,6 +144,7 @@ def build_task(conversation: dict, branch_label: str, transcript_path: Path) -> 
 
 
 def main():
+    validate_config()
     repo_root = repo_root_from_src_file(Path(__file__))
     outputs_root = ensure_dir(repo_root / "outputs")
 
